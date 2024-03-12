@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Page Title</title>
+      <style>
+        html, body {
+    background-color:#eee;
+    height:100%;
+    overflow:auto;
+    margin:0;
+}
+
+* {
+   box-sizing:border-box; 
+}
+
+.cHidden {
+    display:none;
+}
+
+.cShow {
+    display:block; 
+}
+
+.cFade {
+    opacity:1;
+}
+
+.cDoc {
+    background-color:#fff;
+    box-shadow:0px 1px 1px 0px #ccc;
+    border-radius:1px;
+    color:#666;
+    margin-bottom:10px;
+    padding:8px;
+    transform:scale(1);
+    transition:transform 0.2s;
+}
+
+.cDoc:active {
+    transform:scale(0.9);
+}
+
+.cDocTitle {
+    font-weight:bold;
+    padding-bottom:5px;
+}
+
+.cDocBody {
+    font-size:13px;
+    word-wrap:break-word;
+}
+
+.cButtonRed {
+    background-color:#fcc;
+}
+
+.cButtonGreen {
+    background-color:#cfc;
+}
+
+/* ---- Index Page ---- */
+
+#iData {
+    margin:15px;
+}
+
+#iEmpty {
+    color:#888;
+    font-size:11px;
+    padding:8px;
+    text-align:center; 
+}
+
+#iAdd {
+    position:fixed;
+    bottom:18px;
+    right:18px;
+    
+    background-color:#9f9;
+    box-shadow:0px 0px 5px 0px #797979, 0px 0px 30px #7f7 inset;
+    color:#333;
+    font-size:28px;
+    
+    border-radius:100%;
+    padding:10px 18px;
+}
+
+#iAdd:active {
+    box-shadow:0px 0px 8px 0px #757575 inset; 
+}
+
+
+/* ---- Editor Page ---- */
+
+#pEditor {
+    padding:0px 15px;
+}
+
+#iEditorTop {
+    margin:0px 0px;
+    text-align:right;
+}
+
+#iEditorTop span {
+    box-shadow:0px 1px 1px 0px #ccc;
+    border-radius:0px 0px 2px 2px;
+    color:#555;
+    padding:8px 15px;
+    display:inline-block;
+}
+
+#iEditorTop span:active {
+    box-shadow:0px 0px 5px 0px #ccc inset;
+}
+
+#iEditorBody {
+    margin-top:15px;
+}
+
+#iEditTitle {
+    background-color:#eee;
+    border:0px;
+    box-shadow:0px 1px 0px 0px #ccc;
+    font-size:16px;
+    font-weight:bold;
+    outline:0;
+    margin-bottom:8px;
+    width:100%;
+}
+
+#iEditText {
+    background-color:#eee;
+    border:0px;
+    outline:0;
+    overflow-y:show;
+    width:100%;
+}
+
+#iEditLimit {
+    color:#777;
+    font-size:11px;
+    padding:3px 0px 0px 0px;
+    text-align:right; 
+}
+
+/* ---- Other Page ---- */
+
+#toolHint {
+    background:linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7));
+    border-radius:100px;
+    bottom:120px;
+    box-shadow:0px 2px 4px 0px #777;
+    color:#ccc;
+    font-size:13px;
+    padding:5px;
+    left:0px;
+    right:0px;
+    width:70%;
+    opacity:0;
+    transition:opacity 1s;
+    margin:auto;
+    position:fixed;
+    text-align:center;
+    z-index:9;
+        }
+      </style>
+    </head>
+    <body>
+        <!-- Index Page ---------->
+        <div class="cShow" id="pIndex">
+            <div id="iData"></div>
+            <div id="iAdd" onclick="editDocument(-1)">+</div>
+        </div>
+        
+        <!-- Editor Page --------->
+        <div class="cHidden" id="pEditor">
+            <div id="iEditorTop">
+                <span class="cButtonRed" onclick="removeDocument()">DELETE</span>
+                <span class="cButtonGreen" onclick="saveDocument()">SAVE</span>
+            </div>
+            <div id="iEditorBody">
+                <form action="" onsubmit="return false">
+                    <input type="text" id="iEditTitle" placeholder="Title" autocomplete="off" maxlength="40"/>
+                    <textarea id="iEditText" placeholder="Writen something..." rows="10" maxlength="200" onkeyup="updateLimit(this)"></textarea>
+                    <div id="iEditLimit"></div>
+                </form>
+            </div>
+        </div>
+        <!-- Coded by Thomas Hj -->
+        <div class="cHidden" id="toolHint"></div>
+      <script>
+        var aDb = []
+var iData
+
+var eId = -1
+
+window.onload = function() {
+   iData = gId("iData")
+
+   displayData()
+   setInterval(function() {
+       toolHint("Coded by Thomas Hj", 500)
+   }, 120000)
+}
+
+function displayData() {
+   iData.innerHTML = ""
+   if(aDb.length != 0) {
+      for(a = 0; a < aDb.length; a++) {
+         iData.appendChild(displayDocument(a))
+      }
+      return 
+   }
+   iData.innerHTML = '<div id="iEmpty">Empty<br/><br/>Create new note by clicking on the "<b>+</b>" button</div>'
+}
+
+function displayDocument(a) {
+   var arr = aDb[a]
+   var div = crElement("div")
+   div.className = "cDoc"
+   div.addEventListener("click", function() {
+       editDocument(a)
+   })
+   
+   if(arr[0].length != 0) {
+       var title = crElement("div")
+       title.className = "cDocTitle"
+       title.innerText = arr[0]
+       div.appendChild(title)
+   }
+   
+   var text = crElement("div")
+   text.className = "cDocBody"
+   text.innerText = arr[1]
+   div.appendChild(text)
+   
+   return div
+}
+
+function editDocument(a) {
+   eId = a
+   gId("pIndex").className = "cHidden"
+   gId("pEditor").className = "cShow"
+   
+   if(aDb[a] != undefined) {
+       gId("iEditTitle").value = aDb[a][0]
+       gId("iEditText").value = aDb[a][1]
+       gId("iEditText").focus()
+   } else {
+       gId("iEditTitle").focus()
+   }
+   updateLimit(gId("iEditText"))
+}
+
+function removeDocument() {
+    if(gId("iEditTitle").value.length != 0 || gId("iEditText").value.length != 0 || eId != -1) {
+        var x = confirm("Are you sure you want do delete this note?")
+        if(!x) {
+            gId("iEditText").focus()
+            return
+        }
+    }
+    
+    if(eId != -1) {
+        toolHint("Note '" + aDb[eId][0] + "' was deleted!", 1000)
+        aDb.splice(eId, 1)
+    }
+    updateHome()
+}
+
+function saveDocument() {
+    var title = gId("iEditTitle").value
+    var text = gId("iEditText").value
+    
+    if(title == "" && text == "") {
+        alert("Cannot save a empty document")
+        gId("iEditTitle").focus()
+        return
+    }
+    if(eId == -1) {
+        aDb.push([title, text])
+    } else {
+        aDb[eId] = [title, text]
+    }
+    toolHint("Note '" + title + "' was saved!", 1000)
+    updateHome()
+}
+
+function updateHome() {
+    gId("iEditTitle").value = ""
+    gId("iEditText").value = ""
+    gId("iEditLimit").innerText = "250"
+    
+    displayData()
+    gId("pEditor").className = "cHidden"
+    gId("pIndex").className = "cShow"
+}
+
+function updateLimit(a) {
+    var x = a.value.match(/(\n)/g)
+    gId("iEditLimit").innerText = parseInt(a.maxLength) - (a.value.length + (x != null ? x.length : 0))
+}
+
+/* ---- Other Functions ---- */
+
+function gId(a) {
+   return document.getElementById(a) 
+}
+
+function crElement(a) {
+   return document.createElement(a) 
+}
+
+function toolHint(a, b) {
+    var obj = gId("toolHint")
+    obj.innerText = a
+    obj.className = "cShow"
+    obj.style.opacity = 1
+    setTimeout(toolHintOff, b + 1000)
+}
+
+function toolHintOff() {
+    gId("toolHint").style.opacity = 0
+    setTimeout(toolHintHide, 1000)
+}
+
+function toolHintHide() {
+    gId("toolHint").className = "cHidden"
+}
+
+        
+      </script>
+    </body>
+</html>
